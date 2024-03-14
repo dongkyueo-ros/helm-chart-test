@@ -1,7 +1,0 @@
-apiVersion: v2
-entries:
-  test-chart:
-  - name: test-chart
-    version: 0.1.0
-    urls:
-    - https://leedk777-infra@bitbucket.org/maum-system/infra.project-helm/raw/main/test-chart-0.1.0.tgz
