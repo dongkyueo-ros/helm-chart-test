@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}-deployment  # {{ .Values.name }} -> {{ .Release.name }} 으로 변경 고려
+  namespace: {{ .Release.namespace | quote }}  # install 명령시 --namespaces 지정
+spec:
+  {{- if not .Values.autoscaling.enabled }} # hpa 가 false로 되면 replicas가 1로 설정되어 동작
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  progressDeadlineSeconds: {{ .Values.progressDeadlineSeconds }}
+  strategy:
+    type: {{ .Values.strategy.type }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge }}
+  selector:
+    matchLabels:
+      app: {{ .Values.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.Name }}
+    spec:
+      containers:
+      - name: {{ .Values.Name }}
+        image: {{ .Values.container.image }}
+        ports:
+        - containerPort: {{ .Values.container.port }}
+        startupProbe:
+          tcpSocket:
+            port: {{ .Values.container.startupProbe.tcpSocket.port }}
+          initialDelaySeconds: {{ .Values.container.startupProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.container.startupProbe.periodSeconds }}
+          failureThreshold: {{ .Values.container.startupProbe.failureThreshold }}
+        livenessProbe:
+          tcpSocket:
+            port: {{ .Values.container.livenessProbe.tcpSocket.port }}
+          initialDelaySeconds: {{ .Values.container.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.container.livenessProbe.periodSeconds }}
+          failureThreshold: {{ .Values.container.livenessProbe.failureThreshold }}
+        readinessProbe:
+          tcpSocket:
+            port: {{ .Values.container.readinessProbe.tcpSocket.port }}
+          initialDelaySeconds: {{ .Values.container.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.container.readinessProbe.periodSeconds }}
+          failureThreshold: {{ .Values.container.readinessProbe.failureThreshold }}
+        workingDir: {{ .Values.container.workingDir }}
+        command: {{ .Values.container.command | quote }}
+        args: {{ .Values.container.args | toYaml }}
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.name }}-config
+        resources:
+          requests:
+            cpu: {{ .Values.resources.requests.cpu }}
+            memory: {{ .Values.resources.requests.memory }}
+            gpumaum1.com/vram: {{ .Values.resources.requests.gpumaum1.com/vram }}
+          limits:
+            cpu: {{ .Values.resources.limits.cpu }}
+            memory: {{ .Values.resources.limits.memory }}
+            gpumaum1.com/vram: {{ .Values.resources.limits.gpumaum1.com/vram }}
+        volumeMounts:
+        - name: {{ .Values.volumeMounts.name }}
+          mountPath: {{ .Values.volumeMounts.mountPath }}
+      volumes:
+      - name: {{ .Values.volumes.name }}
+        hostPath:
+          path: {{ .Values.volumes.hostPath }}
+          type: {{ .Values.volumes.type }}
