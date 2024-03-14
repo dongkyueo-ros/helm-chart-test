@@ -17,7 +17,7 @@ strategy:
 # container image
 container:
   image: docker.maum.ai:443/brain/former_stt:1.0.6-server
-  port: 15001
+  port: 15001  # service.targetport 설정 같이
 
   # startupProbe(시작 검사) / 컨테이너의 상태를 확인하는 데 사용
   startupProbe:
@@ -52,11 +52,11 @@ resources:
   requests:  # Pod 에 할당되는 최소 리소스
     cpu: "3000m" # 3CPU
     memory: "2000Mi" # 2GiB
-    gpumaum1.com/vram: 30 # 사용자 정의 리소스 30 
+    gpumaum1ComVram: 30 # 사용자 정의 리소스 30 
   limits:  # Pod 가 사용할 수 있는 최대 리소스
     cpu: "6000m" # 6CPU
     memory: "4000Mi" # 4GiB
-    gpumaum1.com/vram: 30 # 사용자 정의 리소스 30
+    gpumaum1ComVram: 30 # 사용자 정의 리소스 30
 
 volumeMounts: # Pod 에 마운트되는 볼륨의 설정
   name: resource-volume
@@ -76,9 +76,9 @@ volumes: # Pod 에서 사용할 볼륨의 설정
 #######################################################
 
 # service labels
-labels:
-  app.kubernetes.io/name: ingress-nginx
-  app.kubernetes.io/part-of: ingress-nginx
+ labels:
+   appKubernetesIoName: ingress-nginx
+   appKubernetesIoPartOf: ingress-nginx
 
 service:
   enabled: true 
@@ -95,11 +95,11 @@ service:
 annotations:
   nginx:
     ingress.class: nginx
-    ssl-redirect: "true"
-    secure-backends: "true"
-    enable-http2: "true"
-    backend-protocol: "GRPC"
-    cluster-issuer: letsencrypt-prod
+    # ssl-redirect: "true"
+    # secure-backends: "true"
+    # enable-http2: "true"
+    # backend-protocol: "GRPC"
+    # cluster-issuer: letsencrypt-prod
 
 ingress:
   className: nginx

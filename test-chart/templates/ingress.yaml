@@ -7,11 +7,11 @@ metadata:
   namespace: {{ .Release.namespace | quote }}
   annotations: ## 여기에 ingress-controller를 명시해줌
     kubernetes.io/ingress.class: {{ .Values.annotations.nginx.ingress.class }}
-    nginx.ingress.kubernetes.io/ssl-redirect: {{ .Values.annotations.nginx.ssl-redirect }}
-    nginx.ingress.kubernetes.io/secure-backends: {{ .Values.annotations.nginx.secure-backends }}
-    nginx.ingress.kubernetes.io/enable-http2: {{ .Values.annotations.nginx.enable-http2 }}
-    nginx.ingress.kubernetes.io/backend-protocol: {{ .Values.annotations.nginx.backend-protocol }}
-    cert-manager.io/cluster-issuer: {{ .Values.annotations.nginx.cluster-issuer }}
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/secure-backends: "true"
+    nginx.ingress.kubernetes.io/enable-http2: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   tls:

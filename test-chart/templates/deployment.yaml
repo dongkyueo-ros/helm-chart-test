@@ -46,7 +46,7 @@ spec:
           failureThreshold: {{ .Values.container.readinessProbe.failureThreshold }}
         workingDir: {{ .Values.container.workingDir }}
         command: {{ .Values.container.command | quote }}
-        args: {{ .Values.container.args | toYaml }}
+        args: {{ .Values.container.args }}
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-config
@@ -54,11 +54,11 @@ spec:
           requests:
             cpu: {{ .Values.resources.requests.cpu }}
             memory: {{ .Values.resources.requests.memory }}
-            gpumaum1.com/vram: {{ .Values.resources.requests.gpumaum1.com/vram }}
+            gpumaum1.com/vram: {{ .Values.resources.requests.gpumaum1ComVram }}
           limits:
             cpu: {{ .Values.resources.limits.cpu }}
             memory: {{ .Values.resources.limits.memory }}
-            gpumaum1.com/vram: {{ .Values.resources.limits.gpumaum1.com/vram }}
+            gpumaum1.com/vram: {{ .Values.resources.limits.gpumaum1ComVram }}
         volumeMounts:
         - name: {{ .Values.volumeMounts.name }}
           mountPath: {{ .Values.volumeMounts.mountPath }}
