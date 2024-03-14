@@ -3,9 +3,9 @@ entries:
   test-chart:
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2024-03-14T09:58:35.9573775+09:00"
+    created: "2024-03-14T10:43:29.8224666+09:00"
     description: A Helm chart for Kubernetes
-    digest: 8ab434daa9c23d845b43e10130fcd397a1a359039e78454aa0b7abeb976d7614
+    digest: 090003cbe25a828ac5fcce7612adea2fbf538c7fcf7ce936c7225e6e06b678c1
     kubeVersion: '>= 1.27.6'
     maintainers:
     - email: leedk777@maum.ai
@@ -14,4 +14,4 @@ entries:
     urls:
     - test-chart-0.1.0.tgz
     version: 0.1.0
-generated: "2024-03-14T09:58:35.9537337+09:00"
+generated: "2024-03-14T10:43:29.8224666+09:00"
