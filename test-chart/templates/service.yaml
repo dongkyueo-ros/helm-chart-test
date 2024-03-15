@@ -1,0 +1,18 @@
+{{- if .Values.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.labels.appKubernetesIoName }}
+    app.kubernetes.io/part-of: {{ .Values.labels.appKubernetesIoPartOf }}
+spec:
+  ports:
+    - protocol: {{ .Values.service.protocol }}
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.container.port }}
+  selector:
+    app: {{ .Values.Name }}
+  type: {{ .Values.service.type }}
+{{- end }}
