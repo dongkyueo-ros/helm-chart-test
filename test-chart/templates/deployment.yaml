@@ -27,19 +27,19 @@ spec:
         ports:
         - containerPort: {{ .Values.container.port }}
         startupProbe:
-          tcpSocket:
+          grpc:
             port: {{ .Values.container.startupProbe.tcpSocket.port }}
           initialDelaySeconds: {{ .Values.container.startupProbe.initialDelaySeconds }}
           periodSeconds: {{ .Values.container.startupProbe.periodSeconds }}
           failureThreshold: {{ .Values.container.startupProbe.failureThreshold }}
         livenessProbe:
-          tcpSocket:
+          grpc:
             port: {{ .Values.container.livenessProbe.tcpSocket.port }}
           initialDelaySeconds: {{ .Values.container.livenessProbe.initialDelaySeconds }}
           periodSeconds: {{ .Values.container.livenessProbe.periodSeconds }}
           failureThreshold: {{ .Values.container.livenessProbe.failureThreshold }}
         readinessProbe:
-          tcpSocket:
+          grpc:
             port: {{ .Values.container.readinessProbe.tcpSocket.port }}
           initialDelaySeconds: {{ .Values.container.readinessProbe.initialDelaySeconds }}
           periodSeconds: {{ .Values.container.readinessProbe.periodSeconds }}

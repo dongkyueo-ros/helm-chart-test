@@ -5,7 +5,8 @@
 name: helm-chart-test
 
 replicaCount: 1
-progressDeadlineSeconds: 300 # 롤링 업데이트 중 배포 완료되어야 하는 시간
+progressDeadlineSeconds: 300 
+# 롤링 업데이트 중 배포 완료되어야 하는 시간
 
 # rollingUpdate 전략 설정
 strategy:
@@ -17,37 +18,37 @@ strategy:
 # container image
 container:
   image: docker.maum.ai:443/brain/former_stt:1.0.6-server
-  port: 15001  # service.targetport 설정 같이
+  port: 15001  
+  # service.targetport 설정 같이
 
   # startupProbe(시작 검사) / 컨테이너의 상태를 확인하는 데 사용
   startupProbe:
-    tcpSocket:
+    grpc:
       port: 15001
     initialDelaySeconds: 180  # 180초
     periodSeconds: 5
     failureThreshold: 2
   # livenessProbe(생존성 검사) / 컨테이너가 실행 중인지 확인하는 데 사용
   livenessProbe:
-    tcpSocket:
+    grpc:
       port: 15001
     initialDelaySeconds: 190  # 15초, Startup Probe 이후에 시작
     periodSeconds: 15
     failureThreshold: 3
   # readinessProbe(준비성 검사) / 컨테이너가 준비된 상태인지 확인하는 데 사용
   readinessProbe:
-    tcpSocket:
+    grpc:
       port: 15001
     initialDelaySeconds: 190  # 15초, Startup Probe 이후에 시작
     periodSeconds: 15
     failureThreshold: 3
 
+  workingDir: /root/asr_server
   # application 을 실행할 디렉터리 지정
-  workingDir: /root/asr_server  
-  # container 를 실행할 때 사용할 명령을 정의
   command:
     - python
     - server.py
-  # 명령에 전달할 인수를 정의
+  # container 를 실행할 때 사용할 명령을 정의
   args:
    - -p
    - 15001
@@ -57,18 +58,19 @@ container:
    - /data/accurate_16000.ckpt
    - -c
    - /data/server_16000_eng.yaml
+  # 명령에 전달할 인수를 정의
 
 resources:
   requests:  # Pod 에 할당되는 최소 리소스
-    cpu: 3000m # 3CPU
-    memory: 2000Mi # 2GiB
-    gpumaum1ComVram: 30 # 사용자 정의 리소스 30 
+    cpu: 3000m  # 3CPU
+    memory: 2000Mi  # 2GiB
+    gpumaum1ComVram: 30  # 사용자 정의 리소스 30 
   limits:  # Pod 가 사용할 수 있는 최대 리소스
-    cpu: 6000m # 6CPU
-    memory: 4000Mi # 4GiB
-    gpumaum1ComVram: 30 # 사용자 정의 리소스 30
+    cpu: 6000m  # 6CPU
+    memory: 4000Mi  # 4GiB
+    gpumaum1ComVram: 30  # 사용자 정의 리소스 30
 
-volumeMounts: # Pod 에 마운트되는 볼륨의 설정
+volumeMounts:  # Pod 에 마운트되는 볼륨의 설정
   name: resource-volume
   mountPath: /data
   # resource-volume 이란 볼륨을 /data 경로에 마운트
@@ -94,8 +96,8 @@ service:
   enabled: true
   suffix: true 
   protocol: TCP
-  port: 31000 # targetPort 설정
-  type: ClusterIP # service 유형 설정
+  port: 31000  # targetPort 설정
+  type: ClusterIP  # service 유형 설정
 
 
 #######################################################
