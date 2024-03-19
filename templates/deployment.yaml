@@ -27,26 +27,14 @@ spec:
         ports:
         - containerPort: {{ .Values.container.port }}
         startupProbe:
-          grpc:
-            port: {{ .Values.container.startupProbe.tcpSocket.port }}
-          initialDelaySeconds: {{ .Values.container.startupProbe.initialDelaySeconds }}
-          periodSeconds: {{ .Values.container.startupProbe.periodSeconds }}
-          failureThreshold: {{ .Values.container.startupProbe.failureThreshold }}
+        {{- include "startupProbe" .Values.startupProbe }}
         livenessProbe:
-          grpc:
-            port: {{ .Values.container.livenessProbe.tcpSocket.port }}
-          initialDelaySeconds: {{ .Values.container.livenessProbe.initialDelaySeconds }}
-          periodSeconds: {{ .Values.container.livenessProbe.periodSeconds }}
-          failureThreshold: {{ .Values.container.livenessProbe.failureThreshold }}
+        {{- include "livenessProbe" .Values.livenessProbe }}
         readinessProbe:
-          grpc:
-            port: {{ .Values.container.readinessProbe.tcpSocket.port }}
-          initialDelaySeconds: {{ .Values.container.readinessProbe.initialDelaySeconds }}
-          periodSeconds: {{ .Values.container.readinessProbe.periodSeconds }}
-          failureThreshold: {{ .Values.container.readinessProbe.failureThreshold }}
-        workingDir: {{ .Values.container.workingDir }}
-        command: [{{- range $index, $arg := .Values.container.command -}}{{ if $index }}, {{ end }}"{{ $arg }}"{{- end -}}]
-        args: [{{- range $index, $arg := .Values.container.args -}}{{ if $index }}, {{ end }}"{{ $arg }}"{{- end -}}]
+        {{- include "readinessProbe" .Values.readinessProbe }}
+        workingDir: {{ .Values.workingDir }}
+        command: [{{- range $index, $arg := .Values.command -}}{{ if $index }}, {{ end }}"{{ $arg }}"{{- end -}}]
+        args: [{{- range $index, $arg := .Values.args -}}{{ if $index }}, {{ end }}"{{ $arg }}"{{- end -}}]
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-config
@@ -60,10 +48,10 @@ spec:
             memory: {{ .Values.resources.limits.memory | quote }}
             gpumaum1.com/vram: {{ .Values.resources.limits.gpumaum1ComVram }}
         volumeMounts:
-        - name: {{ .Values.volumeMounts.name }}
-          mountPath: {{ .Values.volumeMounts.mountPath }}
+        {{- if .Values.volumeMounts }}  # 내용이 있으면 참조 없으면 스킵
+        {{- include "volumeMount" .Values.volumeMounts }}
+        {{- end }}
       volumes:
-      - name: {{ .Values.volumes.name }}
-        hostPath:
-          path: {{ .Values.volumes.hostPath }}
-          type: {{ .Values.volumes.type }}
+      {{- if .Values.volumes }}
+      {{- include "volumes" .Values.volumes }}
+      {{- end }}

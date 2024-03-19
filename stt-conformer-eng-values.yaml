@@ -1,0 +1,141 @@
+############################################################
+####                     configmap                      ####
+############################################################
+
+configMap:
+  data:
+    CFG_PATH: /data/server_16000_eng_231101_udpate.yaml
+    CKPT_PATH: /data/ssbooks_ft4_218_model.ckpt
+    LC_ALL: C.UTF-8
+    LOG_LEVEL: DEBUG
+    MAX_LENGTH: "60"
+    MAX_WORKERS: "1"
+    NVIDIA_DRIVER_CAPABILITIES: compute,utility,video
+    TZ: Asia/Seoul
+    CUDA_VISIBLE_DEVICES: "1"
+
+######################################################
+####                  Deployment                  ####
+######################################################
+
+name: stt-conformer-eng
+
+replicaCount: 1
+progressDeadlineSeconds: 300 
+
+# rollingUpdate 전략 설정
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
+
+# container image
+container:
+  image: docker.maum.ai:443/brain/former_stt:1.0.6-server
+  port: 15001  
+  # service.targetport 같이
+
+# startup, liveness, readiness Probe 정의
+startupProbe:
+  grpc:  # handler 상황에 맞게 변경
+    port: 45101
+  initialDelaySeconds: 1200  # 1200초/20분
+  periodSeconds: 5
+  failureThreshold: 2
+livenessProbe:
+  grpc:
+    port: 45101
+  initialDelaySeconds: 1210  # 10초, Startup Probe 이후에 시작
+  periodSeconds: 15
+  failureThreshold: 3
+readinessProbe:
+  grpc:
+    port: 45101
+  initialDelaySeconds: 1210  # 10초, Startup Probe 이후에 시작
+  periodSeconds: 15
+  failureThreshold: 3
+
+workingDir: /root/asr_server
+command:
+  - python
+  - server.py
+args:
+  - -p
+  - 15001
+  - -l
+  - DEBUG
+  - -m
+  - /data/accurate_16000.ckpt
+  - -c
+  - /data/server_16000_eng.yaml
+
+resources:
+  requests:
+    cpu: 3000m  # 3CPU
+    memory: 2000Mi  # 2GiB
+    gpumaum1ComVram: 30
+  limits:
+    cpu: 6000m  # 6CPU
+    memory: 4000Mi  # 4GiB
+    gpumaum1ComVram: 30
+
+volumeMounts:
+  - name: resource-volume
+    mountPath: /data
+  # resource-volume 이란 볼륨을 /data 경로에 마운트
+
+volumes:
+  - name: resource-volume
+    hostPath:
+      Path: /NAS2/infra/engine/stt/eng_stt
+      type: Directory
+  # resource-volume 이란 볼륨의 호스트인 
+  # /NAS2/infra/engine/stt/eng_stt 경로와 연결하고 있고, 이 볼륨의 유형은 Directory
+
+
+#######################################################
+####                    Service                    ####
+#######################################################
+
+service:
+  enabled: true
+  protocol: TCP
+  port: 31000  # targetPort 설정
+  type: ClusterIP  # service 유형 설정
+
+  # service labels 정의
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+
+#######################################################
+####                    Ingress                    ####
+#######################################################
+
+ingress:
+  enabled: true
+  className: nginx
+  path: /
+  pathType: Prefix
+  portNumber: 31000
+
+  # annotations에 ingress-controller를 명시
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/secure-backends: "true"
+    nginx.ingress.kubernetes.io/enable-http2: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+######################################################
+####                     hpa                      ####
+######################################################
+
+autoscaling:
+  enabled: true  # 허용해야 hpa 동작
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+  # targetMemoryUtilizationPercentage: 70

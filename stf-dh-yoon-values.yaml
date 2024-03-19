@@ -1,0 +1,147 @@
+############################################################
+####                     configmap                      ####
+############################################################
+
+configMap:
+  data:
+    LC_ALL: C.UTF-8
+    NVIDIA_DRIVER_CAPABILITIES: compute,utility,video
+    TZ: Asia/Seoul
+    CUDA_VISIBLE_DEVICES: "0"
+
+######################################################
+####                  Deployment                  ####
+######################################################
+
+name: stf-dh-yoon
+
+replicaCount: 1
+progressDeadlineSeconds: 1800
+
+# rollingUpdate 전략 설정
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
+
+# container image
+container:
+  image: docker.maum.ai:443/brain/stf:v1.8.1-server
+  port: 45101
+  # service.targetport
+
+# startup, liveness, readiness Probe 정의
+startupProbe:
+  grpc:  # handler 상황에 맞게 변경
+    port: 45101
+  initialDelaySeconds: 1200  # 1200초/20분
+  periodSeconds: 5
+  failureThreshold: 2
+livenessProbe:
+  grpc:
+    port: 45101
+  initialDelaySeconds: 1210  # 10초, Startup Probe 이후에 시작
+  periodSeconds: 15
+  failureThreshold: 3
+readinessProbe:
+  grpc:
+    port: 45101
+  initialDelaySeconds: 1210  # 10초, Startup Probe 이후에 시작
+  periodSeconds: 15
+  failureThreshold: 3
+
+workingDir: /root/wav2lip
+command:
+  - python
+  - server.py
+args:
+  - --port
+  - 45101
+  - --config
+  - config/run_server.yaml
+  - --server_dir
+  - /resources
+  - --log_level
+  - INFO
+
+resources:
+  requests:
+    cpu: 4000m  # 4CPU
+    memory: 9000Mi  # 9GiB
+    gpumaum1ComVram: 19
+  limits:
+    cpu: 4000m  # 4CPU
+    memory: 13000Mi  # 13GiB
+    gpumaum1ComVram: 19
+
+# volumeMounts
+volumeMounts:
+  - name: yaml-config-volume
+    mountPath: /root/wav2lip/config/run_server.yaml
+  - name: resource-volume
+    mountPath: /resources
+  - name: output-file-volume
+    mountPath: /root/wav2lip/output_file
+
+# volumes
+volumes:
+  - name: yaml-config-volume
+    hostPath:
+      Path: /root/wav2lip/config/run_server.yaml
+      type: File
+  - name: resource-volume
+    hostPath:
+      Path: /NAS2/infra/engine/stf_infer_data/dh_yoon_grandopen
+      type: Directory
+  - name: output-file-volume
+    hostPath:
+      Path: /NAS2/infra/engine/stf_infer_data/dh_yoon_grandopen/output_file
+      type: Directory
+  
+
+#######################################################
+####                    Service                    ####
+#######################################################
+
+service:
+  enabled: true
+  protocol: TCP
+  port: 30908  # targetPort 설정
+  type: ClusterIP  # service 유형 설정
+  
+  labels: # service labels 의 내용
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+
+
+#######################################################
+####                    Ingress                    ####
+#######################################################
+
+ingress:
+  enabled: true
+  className: nginx
+  path: /
+  pathType: Prefix
+  portNumber: 30908
+
+  # annotations에 ingress-controller를 명시
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/secure-backends: "true"
+    nginx.ingress.kubernetes.io/enable-http2: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+######################################################
+####                     hpa                      ####
+######################################################
+
+autoscaling:
+  enabled: true  # 허용해야 hpa 동작
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+  # targetMemoryUtilizationPercentage: 70
